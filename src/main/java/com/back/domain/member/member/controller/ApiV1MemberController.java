@@ -1,7 +1,9 @@
 package com.back.domain.member.member.controller;
 
+import com.back.domain.member.member.dto.MemberDto;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
+import com.back.global.globalExceptionHandler.UnauthenticatedException;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,10 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/members")
@@ -48,5 +47,19 @@ public class ApiV1MemberController {
                 "201-1",
                 "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(member.getName())
         );
+    }
+
+
+    @GetMapping("/me")
+    @Transactional
+    @Operation(summary = "내 정보")
+    public MemberDto me(
+            @RequestParam(defaultValue = "0") int actorId
+    ) {
+        Member loginMember = memberService.findById(actorId).orElseThrow(
+                UnauthenticatedException::new
+        );
+
+        return new MemberDto(loginMember);
     }
 }

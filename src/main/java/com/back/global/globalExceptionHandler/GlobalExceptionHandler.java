@@ -68,4 +68,15 @@ public class GlobalExceptionHandler {
                 CONFLICT
         );
     }
+
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<RsData<Void>> handle(UnauthenticatedException ex) {
+        return new ResponseEntity<>(
+                new RsData<>(
+                        "401-1",
+                        ex.getMessage()
+                ),
+                UNAUTHORIZED
+        );
+    }
 }
