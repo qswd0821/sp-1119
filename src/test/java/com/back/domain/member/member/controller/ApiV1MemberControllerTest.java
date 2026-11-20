@@ -14,6 +14,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -149,5 +152,46 @@ public class ApiV1MemberControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.resultCode").value("401-1"))
                 .andExpect(jsonPath("$.msg").value("로그인 후 이용해주세요."));
+    }
+
+    @Test
+    @DisplayName("샘플 회원 6명이 생성되어 있다")
+    void t5() throws Exception {
+        assertThat(memberService.count()).isEqualTo(6);
+
+        List.of(
+                List.of("system", "시스템"),
+                List.of("admin", "관리자"),
+                List.of("user1", "유저1"),
+                List.of("user2", "유저2"),
+                List.of("user3", "유저3"),
+                List.of("user4", "유저4")
+        ).forEach(pair -> {
+            Member member = memberService.findByUsername(pair.get(0)).get();
+
+            assertThat(member.getName()).isEqualTo(pair.get(1));
+            assertThat(member.getPassword()).isEqualTo("12345678");
+        });
+    }
+
+    @Test
+    @DisplayName("내 정보 - 샘플 회원 user1")
+    void t6() throws Exception {
+        Member member = memberService.findByUsername("user1").get();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/members/me?actorId=%d".formatted(member.getId()))
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(member.getId()))
+                .andExpect(jsonPath("$.username").value("user1"))
+                .andExpect(jsonPath("$.name").value("유저1"))
+                .andExpect(jsonPath("$.password").doesNotExist());
     }
 }
